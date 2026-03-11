@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AuthSessionEntity } from './auth/entities/auth-session.entity';
 import { AttendanceEntity } from './attendance/attendance.entity';
@@ -74,6 +73,6 @@ import { UsersModule } from './users/users.module';
     EvaluationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}
