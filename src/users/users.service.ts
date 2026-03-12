@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { Role } from '../auth/roles.enum';
 import { TenantEntity } from '../tenants/tenant.entity';
@@ -52,13 +52,17 @@ export class UsersService {
   async findAll(actor: AuthenticatedUser) {
     if (actor.role === Role.TENANT_ADMIN) {
       return this.usersRepository.find({
-        where: { tenantId: actor.tenantId },
+        where: {
+          tenantId: actor.tenantId,
+          role: Not(Role.SUPER_ADMIN),
+        },
         relations: { tenant: true },
         order: { createdAt: 'DESC' },
       });
     }
 
     return this.usersRepository.find({
+      where: { role: Not(Role.SUPER_ADMIN) },
       relations: { tenant: true },
       order: { createdAt: 'DESC' },
     });
@@ -71,6 +75,10 @@ export class UsersService {
     });
 
     if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === Role.SUPER_ADMIN && actor.role !== Role.SUPER_ADMIN) {
       throw new NotFoundException('User not found');
     }
 

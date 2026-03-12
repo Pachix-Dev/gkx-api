@@ -9,6 +9,19 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  EvaluationModel,
+  GoalkeeperMetricsModel,
+  GoalkeeperModel,
+  GoalkeeperProgressModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,6 +34,8 @@ import { GoalkeepersService } from './goalkeepers.service';
 
 @Controller('goalkeepers')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Goalkeepers')
+@ApiBearerAuth('jwt-auth')
 export class GoalkeepersController {
   constructor(private readonly goalkeepersService: GoalkeepersService) {}
 
@@ -31,6 +46,13 @@ export class GoalkeepersController {
     Role.COACH,
     Role.ASSISTANT_COACH,
   )
+  @ApiOperation({ summary: 'Crear perfil de portero' })
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper profile created successfully',
+    status: 201,
+    model: GoalkeeperModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateGoalkeeperDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -47,6 +69,13 @@ export class GoalkeepersController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar perfiles de portero' })
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper profiles retrieved successfully',
+    isArray: true,
+    model: GoalkeeperModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.goalkeepersService.findAll(user);
     return { success: true, message: 'Goalkeeper profiles retrieved successfully', data };
@@ -60,6 +89,13 @@ export class GoalkeepersController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener perfil de portero por id' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper profile retrieved successfully',
+    model: GoalkeeperModel,
+  })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -76,6 +112,13 @@ export class GoalkeepersController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener progreso agregado del portero' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper progress retrieved successfully',
+    model: GoalkeeperProgressModel,
+  })
+  @ApiCommonErrorResponses()
   async getProgress(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -92,6 +135,14 @@ export class GoalkeepersController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar evaluaciones del portero' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper evaluations retrieved successfully',
+    isArray: true,
+    model: EvaluationModel,
+  })
+  @ApiCommonErrorResponses()
   async getEvaluations(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -108,6 +159,13 @@ export class GoalkeepersController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener metricas del portero' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper metrics retrieved successfully',
+    model: GoalkeeperMetricsModel,
+  })
+  @ApiCommonErrorResponses()
   async getMetrics(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -123,6 +181,13 @@ export class GoalkeepersController {
     Role.COACH,
     Role.ASSISTANT_COACH,
   )
+  @ApiOperation({ summary: 'Actualizar perfil de portero' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper profile updated successfully',
+    model: GoalkeeperModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGoalkeeperDto,
@@ -134,6 +199,13 @@ export class GoalkeepersController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar perfil de portero' })
+  @ApiUuidParam('id', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper profile deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

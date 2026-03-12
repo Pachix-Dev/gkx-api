@@ -5,6 +5,13 @@ import {
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import { ExerciseModel } from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,6 +22,8 @@ import { ExercisesService } from './exercises.service';
 
 @Controller('training-contents/:id/exercises')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Exercises')
+@ApiBearerAuth('jwt-auth')
 export class ExercisesNestedController {
   constructor(private readonly exercisesService: ExercisesService) {}
 
@@ -26,6 +35,14 @@ export class ExercisesNestedController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar ejercicios por contenido de entrenamiento' })
+  @ApiUuidParam('id', 'Identificador del contenido de entrenamiento')
+  @ApiTypedSuccessResponse({
+    message: 'Exercises retrieved successfully',
+    isArray: true,
+    model: ExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async findByTrainingContent(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

@@ -10,6 +10,18 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import { DeleteDataModel, ExerciseModel } from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,11 +34,20 @@ import { ExercisesService } from './exercises.service';
 
 @Controller('exercises')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Exercises')
+@ApiBearerAuth('jwt-auth')
 export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Crear ejercicio' })
+  @ApiTypedSuccessResponse({
+    message: 'Exercise created successfully',
+    status: 201,
+    model: ExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateExerciseDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -43,6 +64,16 @@ export class ExercisesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar ejercicios' })
+  @ApiQuery({ name: 'trainingContentId', required: false, format: 'uuid' })
+  @ApiQuery({ name: 'difficulty', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiTypedSuccessResponse({
+    message: 'Exercises retrieved successfully',
+    isArray: true,
+    model: ExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(
     @CurrentUser() user: AuthenticatedUser,
     @Query('trainingContentId') trainingContentId?: string,
@@ -65,6 +96,10 @@ export class ExercisesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener ejercicio por id' })
+  @ApiUuidParam('id', 'Identificador del ejercicio')
+  @ApiTypedSuccessResponse({ message: 'Exercise retrieved successfully', model: ExerciseModel })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -75,6 +110,10 @@ export class ExercisesController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar ejercicio' })
+  @ApiUuidParam('id', 'Identificador del ejercicio')
+  @ApiTypedSuccessResponse({ message: 'Exercise updated successfully', model: ExerciseModel })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateExerciseDto,
@@ -86,6 +125,10 @@ export class ExercisesController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar ejercicio' })
+  @ApiUuidParam('id', 'Identificador del ejercicio')
+  @ApiTypedSuccessResponse({ message: 'Exercise deleted successfully', model: DeleteDataModel })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

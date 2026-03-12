@@ -696,7 +696,7 @@ PATCH /subscriptions/cancel
 
 ### FREE
 - 1 coach
-- 10 goalkeepers
+- 1 goalkeepers
 - basic reports
 
 ### BASIC

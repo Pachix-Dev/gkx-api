@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  SessionContentModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +31,21 @@ import { SessionContentsService } from './session-contents.service';
 
 @Controller('training-sessions/:sessionId/contents')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Session Contents')
+@ApiBearerAuth('jwt-auth')
 export class SessionContentsNestedController {
   constructor(private readonly sessionContentsService: SessionContentsService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Agregar contenido a una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiTypedSuccessResponse({
+    message: 'Session content created successfully',
+    status: 201,
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Body() dto: CreateSessionContentDto,
@@ -47,6 +67,14 @@ export class SessionContentsNestedController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar contenidos de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiTypedSuccessResponse({
+    message: 'Session contents retrieved successfully',
+    isArray: true,
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async findBySession(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -57,6 +85,14 @@ export class SessionContentsNestedController {
 
   @Patch(':sessionContentId')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar contenido de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiUuidParam('sessionContentId', 'Identificador de session-content')
+  @ApiTypedSuccessResponse({
+    message: 'Session content updated successfully',
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Param('sessionContentId', ParseUUIDPipe) sessionContentId: string,
@@ -74,6 +110,14 @@ export class SessionContentsNestedController {
 
   @Delete(':sessionContentId')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar contenido de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiUuidParam('sessionContentId', 'Identificador de session-content')
+  @ApiTypedSuccessResponse({
+    message: 'Session content deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Param('sessionContentId', ParseUUIDPipe) sessionContentId: string,

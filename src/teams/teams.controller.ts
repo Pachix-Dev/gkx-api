@@ -9,6 +9,17 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  GoalkeeperModel,
+  TeamModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +32,16 @@ import { TeamsService } from './teams.service';
 
 @Controller('teams')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Teams')
+@ApiBearerAuth('jwt-auth')
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH)
+  @ApiOperation({ summary: 'Crear equipo' })
+  @ApiTypedSuccessResponse({ message: 'Team created successfully', status: 201, model: TeamModel })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateTeamDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -42,6 +58,9 @@ export class TeamsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar equipos' })
+  @ApiTypedSuccessResponse({ message: 'Teams retrieved successfully', isArray: true, model: TeamModel })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.teamsService.findAll(user);
     return { success: true, message: 'Teams retrieved successfully', data };
@@ -55,6 +74,10 @@ export class TeamsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener equipo por id' })
+  @ApiUuidParam('id', 'Identificador del equipo')
+  @ApiTypedSuccessResponse({ message: 'Team retrieved successfully', model: TeamModel })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +88,10 @@ export class TeamsController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH)
+  @ApiOperation({ summary: 'Actualizar equipo' })
+  @ApiUuidParam('id', 'Identificador del equipo')
+  @ApiTypedSuccessResponse({ message: 'Team updated successfully', model: TeamModel })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTeamDto,
@@ -76,6 +103,10 @@ export class TeamsController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar equipo' })
+  @ApiUuidParam('id', 'Identificador del equipo')
+  @ApiTypedSuccessResponse({ message: 'Team deleted successfully', model: DeleteDataModel })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -86,6 +117,15 @@ export class TeamsController {
 
   @Post(':id/goalkeepers/:goalkeeperId')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH)
+  @ApiOperation({ summary: 'Asignar portero a equipo' })
+  @ApiUuidParam('id', 'Identificador del equipo')
+  @ApiUuidParam('goalkeeperId', 'Identificador del portero')
+  @ApiTypedSuccessResponse({
+    message: 'Goalkeeper assigned to team successfully',
+    status: 201,
+    model: GoalkeeperModel,
+  })
+  @ApiCommonErrorResponses()
   async assignGoalkeeper(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('goalkeeperId', ParseUUIDPipe) goalkeeperId: string,

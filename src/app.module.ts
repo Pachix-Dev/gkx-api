@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { AuthSessionEntity } from './auth/entities/auth-session.entity';
+import { EmailActionTokenEntity } from './auth/entities/email-action-token.entity';
 import { AttendanceEntity } from './attendance/attendance.entity';
 import { AttendanceModule } from './attendance/attendance.module';
 import { CoachEntity } from './coaches/coach.entity';
@@ -29,9 +30,13 @@ import { TrainingSessionEntity } from './training-sessions/training-session.enti
 import { TrainingSessionsModule } from './training-sessions/training-sessions.module';
 import { UserEntity } from './users/user.entity';
 import { UsersModule } from './users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST ?? 'localhost',
@@ -43,6 +48,7 @@ import { UsersModule } from './users/users.module';
         TenantEntity,
         UserEntity,
         AuthSessionEntity,
+        EmailActionTokenEntity,
         GoalkeeperEntity,
         CoachEntity,
         TeamEntity,

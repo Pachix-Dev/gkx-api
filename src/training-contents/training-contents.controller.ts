@@ -10,6 +10,21 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  TrainingContentModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,11 +37,20 @@ import { TrainingContentsService } from './training-contents.service';
 
 @Controller('training-contents')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Training Contents')
+@ApiBearerAuth('jwt-auth')
 export class TrainingContentsController {
   constructor(private readonly contentsService: TrainingContentsService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Crear contenido de entrenamiento' })
+  @ApiTypedSuccessResponse({
+    message: 'Training content created successfully',
+    status: 201,
+    model: TrainingContentModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateTrainingContentDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -43,6 +67,16 @@ export class TrainingContentsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar contenidos de entrenamiento' })
+  @ApiQuery({ name: 'trainingLineId', required: false, format: 'uuid' })
+  @ApiQuery({ name: 'level', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiTypedSuccessResponse({
+    message: 'Training contents retrieved successfully',
+    isArray: true,
+    model: TrainingContentModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(
     @CurrentUser() user: AuthenticatedUser,
     @Query('trainingLineId') trainingLineId?: string,
@@ -65,6 +99,13 @@ export class TrainingContentsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener contenido por id' })
+  @ApiUuidParam('id', 'Identificador del contenido')
+  @ApiTypedSuccessResponse({
+    message: 'Training content retrieved successfully',
+    model: TrainingContentModel,
+  })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -75,6 +116,13 @@ export class TrainingContentsController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar contenido de entrenamiento' })
+  @ApiUuidParam('id', 'Identificador del contenido')
+  @ApiTypedSuccessResponse({
+    message: 'Training content updated successfully',
+    model: TrainingContentModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTrainingContentDto,
@@ -86,6 +134,13 @@ export class TrainingContentsController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar contenido de entrenamiento' })
+  @ApiUuidParam('id', 'Identificador del contenido')
+  @ApiTypedSuccessResponse({
+    message: 'Training content deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

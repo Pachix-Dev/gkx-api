@@ -9,6 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import { DeleteDataModel, PublicTenantModel } from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +28,20 @@ import { TenantsService } from './tenants.service';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Tenants')
+@ApiBearerAuth('jwt-auth')
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Crear tenant' })
+  @ApiTypedSuccessResponse({
+    message: 'Tenant created successfully',
+    status: 201,
+    model: PublicTenantModel,
+  })
+  @ApiCommonErrorResponses()
   async create(@Body() dto: CreateTenantDto) {
     const data = await this.tenantsService.create(dto);
     return { success: true, message: 'Tenant created successfully', data };
@@ -33,6 +49,13 @@ export class TenantsController {
 
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Listar tenants' })
+  @ApiTypedSuccessResponse({
+    message: 'Tenants retrieved successfully',
+    isArray: true,
+    model: PublicTenantModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.tenantsService.findAll(user);
     return { success: true, message: 'Tenants retrieved successfully', data };
@@ -40,6 +63,10 @@ export class TenantsController {
 
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Obtener tenant por id' })
+  @ApiUuidParam('id', 'Identificador del tenant')
+  @ApiTypedSuccessResponse({ message: 'Tenant retrieved successfully', model: PublicTenantModel })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -50,6 +77,10 @@ export class TenantsController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Actualizar tenant' })
+  @ApiUuidParam('id', 'Identificador del tenant')
+  @ApiTypedSuccessResponse({ message: 'Tenant updated successfully', model: PublicTenantModel })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTenantDto,
@@ -61,6 +92,10 @@ export class TenantsController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Eliminar tenant' })
+  @ApiUuidParam('id', 'Identificador del tenant')
+  @ApiTypedSuccessResponse({ message: 'Tenant deleted successfully', model: DeleteDataModel })
+  @ApiCommonErrorResponses()
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     const data = await this.tenantsService.remove(id);
     return { success: true, message: 'Tenant deleted successfully', data };

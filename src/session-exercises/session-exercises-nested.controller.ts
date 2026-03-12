@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  SessionExerciseModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +31,21 @@ import { SessionExercisesService } from './session-exercises.service';
 
 @Controller('training-sessions/:sessionId/exercises')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Session Exercises')
+@ApiBearerAuth('jwt-auth')
 export class SessionExercisesNestedController {
   constructor(private readonly sessionExercisesService: SessionExercisesService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Agregar ejercicio a una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise created successfully',
+    status: 201,
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Body() dto: CreateSessionExerciseDto,
@@ -47,6 +67,14 @@ export class SessionExercisesNestedController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar ejercicios de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercises retrieved successfully',
+    isArray: true,
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async findBySession(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -57,6 +85,14 @@ export class SessionExercisesNestedController {
 
   @Patch(':sessionExerciseId')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar ejercicio de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiUuidParam('sessionExerciseId', 'Identificador de session-exercise')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise updated successfully',
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Param('sessionExerciseId', ParseUUIDPipe) sessionExerciseId: string,
@@ -74,6 +110,14 @@ export class SessionExercisesNestedController {
 
   @Delete(':sessionExerciseId')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar ejercicio de una sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiUuidParam('sessionExerciseId', 'Identificador de session-exercise')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @Param('sessionExerciseId', ParseUUIDPipe) sessionExerciseId: string,

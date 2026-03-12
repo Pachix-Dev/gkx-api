@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  SessionExerciseModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +31,20 @@ import { SessionExercisesService } from './session-exercises.service';
 
 @Controller('session-exercises')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Session Exercises')
+@ApiBearerAuth('jwt-auth')
 export class SessionExercisesController {
   constructor(private readonly sessionExercisesService: SessionExercisesService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Crear relacion session-exercise' })
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise created successfully',
+    status: 201,
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateSessionExerciseDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -42,6 +61,13 @@ export class SessionExercisesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar session-exercises' })
+  @ApiTypedSuccessResponse({
+    message: 'Session exercises retrieved successfully',
+    isArray: true,
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.sessionExercisesService.findAll(user);
     return { success: true, message: 'Session exercises retrieved successfully', data };
@@ -55,6 +81,13 @@ export class SessionExercisesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener session-exercise por id' })
+  @ApiUuidParam('id', 'Identificador de session-exercise')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise retrieved successfully',
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +98,13 @@ export class SessionExercisesController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar session-exercise' })
+  @ApiUuidParam('id', 'Identificador de session-exercise')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise updated successfully',
+    model: SessionExerciseModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSessionExerciseDto,
@@ -76,6 +116,13 @@ export class SessionExercisesController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar session-exercise' })
+  @ApiUuidParam('id', 'Identificador de session-exercise')
+  @ApiTypedSuccessResponse({
+    message: 'Session exercise deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

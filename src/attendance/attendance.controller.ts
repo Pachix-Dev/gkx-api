@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  AttendanceModel,
+  DeleteDataModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,11 +32,20 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 
 @Controller('attendance')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Attendance')
+@ApiBearerAuth('jwt-auth')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Registrar asistencia individual' })
+  @ApiTypedSuccessResponse({
+    message: 'Attendance created successfully',
+    status: 201,
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateAttendanceDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -41,6 +60,14 @@ export class AttendanceController {
 
   @Post('bulk')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Registrar asistencia masiva por sesion' })
+  @ApiTypedSuccessResponse({
+    message: 'Attendance bulk upsert successful',
+    status: 201,
+    isArray: true,
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async createBulk(
     @Body() dto: CreateAttendanceBulkDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -61,6 +88,13 @@ export class AttendanceController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar asistencias' })
+  @ApiTypedSuccessResponse({
+    message: 'Attendance records retrieved successfully',
+    isArray: true,
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data: unknown = await this.attendanceService.findAll(user);
     return {
@@ -78,6 +112,14 @@ export class AttendanceController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar asistencias por sesion' })
+  @ApiUuidParam('sessionId', 'Identificador de la sesion')
+  @ApiTypedSuccessResponse({
+    message: 'Session attendance retrieved successfully',
+    isArray: true,
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async findBySession(
     @Param('sessionId', ParseUUIDPipe) sessionId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -101,6 +143,13 @@ export class AttendanceController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener asistencia por id' })
+  @ApiUuidParam('id', 'Identificador del registro de asistencia')
+  @ApiTypedSuccessResponse({
+    message: 'Attendance record retrieved successfully',
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -115,6 +164,13 @@ export class AttendanceController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar asistencia' })
+  @ApiUuidParam('id', 'Identificador del registro de asistencia')
+  @ApiTypedSuccessResponse({
+    message: 'Attendance record updated successfully',
+    model: AttendanceModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAttendanceDto,
@@ -130,6 +186,13 @@ export class AttendanceController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar asistencia' })
+  @ApiUuidParam('id', 'Identificador del registro de asistencia')
+  @ApiTypedSuccessResponse({
+    message: 'Attendance record deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

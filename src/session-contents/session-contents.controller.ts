@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import {
+  DeleteDataModel,
+  SessionContentModel,
+} from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +31,20 @@ import { SessionContentsService } from './session-contents.service';
 
 @Controller('session-contents')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Session Contents')
+@ApiBearerAuth('jwt-auth')
 export class SessionContentsController {
   constructor(private readonly sessionContentsService: SessionContentsService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Crear relacion session-content' })
+  @ApiTypedSuccessResponse({
+    message: 'Session content created successfully',
+    status: 201,
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateSessionContentDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -42,6 +61,13 @@ export class SessionContentsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar session-contents' })
+  @ApiTypedSuccessResponse({
+    message: 'Session contents retrieved successfully',
+    isArray: true,
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.sessionContentsService.findAll(user);
     return { success: true, message: 'Session contents retrieved successfully', data };
@@ -55,6 +81,13 @@ export class SessionContentsController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener session-content por id' })
+  @ApiUuidParam('id', 'Identificador de session-content')
+  @ApiTypedSuccessResponse({
+    message: 'Session content retrieved successfully',
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +98,13 @@ export class SessionContentsController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN, Role.COACH, Role.ASSISTANT_COACH)
+  @ApiOperation({ summary: 'Actualizar session-content' })
+  @ApiUuidParam('id', 'Identificador de session-content')
+  @ApiTypedSuccessResponse({
+    message: 'Session content updated successfully',
+    model: SessionContentModel,
+  })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSessionContentDto,
@@ -76,6 +116,13 @@ export class SessionContentsController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar session-content' })
+  @ApiUuidParam('id', 'Identificador de session-content')
+  @ApiTypedSuccessResponse({
+    message: 'Session content deleted successfully',
+    model: DeleteDataModel,
+  })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

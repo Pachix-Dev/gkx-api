@@ -9,6 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import { DeleteDataModel, PublicUserModel } from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +28,20 @@ import { UsersService } from './users.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Users')
+@ApiBearerAuth('jwt-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Crear usuario' })
+  @ApiTypedSuccessResponse({
+    message: 'User created successfully',
+    status: 201,
+    model: PublicUserModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateUserDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -36,6 +52,13 @@ export class UsersController {
 
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Listar usuarios' })
+  @ApiTypedSuccessResponse({
+    message: 'Users retrieved successfully',
+    isArray: true,
+    model: PublicUserModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.usersService.findAll(user);
     return { success: true, message: 'Users retrieved successfully', data };
@@ -43,6 +66,10 @@ export class UsersController {
 
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Obtener usuario por id' })
+  @ApiUuidParam('id', 'Identificador del usuario')
+  @ApiTypedSuccessResponse({ message: 'User retrieved successfully', model: PublicUserModel })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -53,6 +80,10 @@ export class UsersController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Actualizar usuario' })
+  @ApiUuidParam('id', 'Identificador del usuario')
+  @ApiTypedSuccessResponse({ message: 'User updated successfully', model: PublicUserModel })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
@@ -64,6 +95,10 @@ export class UsersController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar usuario' })
+  @ApiUuidParam('id', 'Identificador del usuario')
+  @ApiTypedSuccessResponse({ message: 'User deleted successfully', model: DeleteDataModel })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,

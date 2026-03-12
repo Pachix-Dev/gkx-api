@@ -44,6 +44,9 @@ export class UserEntity {
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.ACTIVE })
   status!: UserStatus;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerifiedAt!: Date | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

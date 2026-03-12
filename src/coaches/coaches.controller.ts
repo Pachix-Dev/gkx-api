@@ -9,6 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCommonErrorResponses,
+  ApiTypedSuccessResponse,
+  ApiUuidParam,
+} from '../common/swagger/openapi.decorators';
+import { CoachModel, DeleteDataModel } from '../common/swagger/response-models';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,11 +28,20 @@ import { UpdateCoachDto } from './dto/update-coach.dto';
 
 @Controller('coaches')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Coaches')
+@ApiBearerAuth('jwt-auth')
 export class CoachesController {
   constructor(private readonly coachesService: CoachesService) {}
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Crear perfil de coach' })
+  @ApiTypedSuccessResponse({
+    message: 'Coach profile created successfully',
+    status: 201,
+    model: CoachModel,
+  })
+  @ApiCommonErrorResponses()
   async create(
     @Body() dto: CreateCoachDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -42,6 +58,13 @@ export class CoachesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Listar perfiles de coach' })
+  @ApiTypedSuccessResponse({
+    message: 'Coach profiles retrieved successfully',
+    isArray: true,
+    model: CoachModel,
+  })
+  @ApiCommonErrorResponses()
   async findAll(@CurrentUser() user: AuthenticatedUser) {
     const data = await this.coachesService.findAll(user);
     return { success: true, message: 'Coach profiles retrieved successfully', data };
@@ -55,6 +78,10 @@ export class CoachesController {
     Role.ASSISTANT_COACH,
     Role.READONLY,
   )
+  @ApiOperation({ summary: 'Obtener perfil de coach por id' })
+  @ApiUuidParam('id', 'Identificador del coach')
+  @ApiTypedSuccessResponse({ message: 'Coach profile retrieved successfully', model: CoachModel })
+  @ApiCommonErrorResponses()
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +92,10 @@ export class CoachesController {
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Actualizar perfil de coach' })
+  @ApiUuidParam('id', 'Identificador del coach')
+  @ApiTypedSuccessResponse({ message: 'Coach profile updated successfully', model: CoachModel })
+  @ApiCommonErrorResponses()
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCoachDto,
@@ -76,6 +107,10 @@ export class CoachesController {
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Eliminar perfil de coach' })
+  @ApiUuidParam('id', 'Identificador del coach')
+  @ApiTypedSuccessResponse({ message: 'Coach profile deleted successfully', model: DeleteDataModel })
+  @ApiCommonErrorResponses()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
